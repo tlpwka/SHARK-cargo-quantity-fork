@@ -47,7 +47,7 @@ class Ship(object):
         # declare capacities for pax, mail and freight, as they are needed later for nml switches
         self.capacity_pax = kwargs.get('capacity_pax', 0)
         self.capacity_mail = kwargs.get('capacity_mail', 0)
-        self.capacity_freight = kwargs.get('capacity_freight', 0) # over-ride in subclass as needed
+        self.capacity_freight = 1.2 * kwargs.get('capacity_freight', 0) # over-ride in subclass as needed
         # most ships use steam effect_spawn_model so set default, over-ride in ships as needed
         self.effect_spawn_model = kwargs.get('effect_spawn_model', 'EFFECT_SPAWN_MODEL_STEAM')
         self.effects = kwargs.get('effects', [])
@@ -95,13 +95,13 @@ class Ship(object):
     def get_speeds_adjusted_for_load_amount(self, speed_index):
         # ships may travel faster or slower than 'speed' depending on cargo amount
         speeds_adjusted = (
-            ((self.speed_unladen * 100 + self.speed * 0) * 32 + 9) / 1000,
-            ((self.speed_unladen * 75 + self.speed * 25) * 32 + 9) / 1000,
-            ((self.speed_unladen * 50 + self.speed * 50) * 32 + 9) / 1000,
-            ((self.speed_unladen * 25 + self.speed * 75) * 32 + 9) / 1000,
-            ((self.speed_unladen * 0 + self.speed * 100) * 32 + 9) / 1000,
+            ((self.speed_unladen * 1 + self.speed * 0) * 1 + 37) / 1,
+            ((self.speed_unladen * 1 + self.speed * 0) * 1 + 37) / 1,
+            ((self.speed_unladen * 1 + self.speed * 0) * 1 + 37) / 1,
+            ((self.speed_unladen * 1 + self.speed * 0) * 1 + 37) / 1,
+            ((self.speed_unladen * 1 + self.speed * 0) * 1 + 37) / 1,
         )
-        speed_factors = [0.67, 1, 1.33] # there is a speed adjustment parameter, use that to look up a speed factor
+        speed_factors = [1, 1, 1] # there is a speed adjustment parameter, use that to look up a speed factor
         speeds_adjusted_rounded = [int(min(math.ceil(i * speed_factors[speed_index]), 79 * 3.2)) for i in speeds_adjusted] # allow that integer maths is needed for newgrf cb results; rounding up for safety
         return speeds_adjusted_rounded
 
@@ -238,7 +238,7 @@ class GeneralCargoVessel(Ship):
         self.class_refit_groups = ['all_freight']
         self.label_refits_allowed = [] # no specific labels needed, GCV refits all freight
         self.label_refits_disallowed = ['TOUR']
-        self.capacity_freight = kwargs.get('capacity_cargo_holds', None)
+        self.capacity_freight = 2 * kwargs.get('capacity_cargo_holds', None)
         self.default_cargo = 'COAL'
         self.default_cargo_capacity = self.capacity_freight
 
@@ -254,7 +254,7 @@ class UtilityVessel(Ship):
         self.label_refits_allowed = [] # no specific labels needed, GCV refits all cargo
         self.label_refits_disallowed = []
         self.capacity_cargo_holds = kwargs.get('capacity_cargo_holds', 0)
-        self.capacity_freight = self.capacity_cargo_holds
+        self.capacity_freight = 2 * self.capacity_cargo_holds
         self.default_cargo = 'PASS'
         self.default_cargo_capacity = self.capacity_pax
 
@@ -278,7 +278,7 @@ class LivestockCarrier(MixinRefittableCapacity, Ship):
         self.label_refits_allowed = ['LVST'] # set to livestock by default, don't need to make it refit
         self.label_refits_disallowed = []
         self.capacities_refittable = kwargs.get('capacities_refittable', None)
-        self.capacity_freight = self.capacities_refittable[0]
+        self.capacity_freight = 2 * self.capacities_refittable[0]
         self.cargo_units_buy_menu = 'STR_QUANTITY_LIVESTOCK'
         self.cargo_units_refit_menu = 'STR_UNIT_ITEMS'
         self.default_cargo = 'LVST'
@@ -299,7 +299,7 @@ class LogTug(MixinRefittableCapacity, Ship):
         self.label_refits_allowed = ['WOOD']
         self.label_refits_disallowed = []
         self.capacities_refittable = kwargs.get('capacities_refittable', None)
-        self.capacity_freight = self.capacities_refittable[0]
+        self.capacity_freight = 2 * self.capacities_refittable[0]
         self.cargo_units_buy_menu = 'STR_QUANTITY_WOOD'
         self.cargo_units_refit_menu = 'STR_UNIT_TONNES'
         self.default_cargo = 'WOOD'
@@ -317,7 +317,7 @@ class PacketBoat(Ship):
         self.label_refits_allowed = ['BDMT','FRUT','LVST','VEHI','WATR']
         self.label_refits_disallowed = ['FISH'] # don't go fishing with packet boats, use a trawler instead :P
         self.capacity_cargo_holds = kwargs.get('capacity_cargo_holds', 0)
-        self.capacity_freight = self.capacity_cargo_holds
+        self.capacity_freight = 2 * self.capacity_cargo_holds
         self.default_cargo = 'PASS'
         self.default_cargo_capacity = self.capacity_pax
 
@@ -351,7 +351,7 @@ class Trawler(Ship):
         self.label_refits_allowed = ['BDMT','FISH', 'FRUT','LVST','VEHI','WATR']
         self.label_refits_disallowed = []
         self.capacity_deck_cargo = kwargs.get('capacity_deck_cargo', None)
-        self.capacity_freight = self.capacity_deck_cargo
+        self.capacity_freight = 2 * self.capacity_deck_cargo
         self.capacity_fish_holds = kwargs.get('capacity_fish_holds', None)
         self.default_cargo = 'FISH'
         self.default_cargo_capacity = self.capacity_fish_holds
@@ -377,7 +377,7 @@ class Tanker(Ship):
         self.label_refits_allowed = [] # refits most cargos that have liquid class even if they might be edibles
         self.label_refits_disallowed = global_constants.label_refits_disallowed['edible_liquids'] # don't allow known edible liquids
         self.capacity_tanks = kwargs.get('capacity_tanks', None)
-        self.capacity_freight = self.capacity_tanks
+        self.capacity_freight = 3 * self.capacity_tanks
         self.default_cargo = 'OIL_'
         self.default_cargo_capacity = self.capacity_freight
 
@@ -393,7 +393,7 @@ class EdiblesTanker(Ship):
         self.label_refits_allowed = [] # refits most cargos that have liquid class even if they might be inedibles
         self.label_refits_disallowed = global_constants.label_refits_disallowed['non_edible_liquids'] # don't allow known inedibles
         self.capacity_tanks = kwargs.get('capacity_tanks', None)
-        self.capacity_freight = self.capacity_tanks
+        self.capacity_freight = 3 * self.capacity_tanks
         self.default_cargo = 'WATR'
         self.default_cargo_capacity = self.capacity_freight
 
@@ -409,7 +409,7 @@ class Reefer(MixinRefittableCapacity, Ship):
         self.label_refits_allowed = [] # no specific labels needed, refits all cargos that have refrigerated class
         self.label_refits_disallowed = []
         self.capacities_refittable = kwargs.get('capacities_refittable', None)
-        self.capacity_freight = self.capacities_refittable[0]
+        self.capacity_freight = 2 * self.capacities_refittable[0]
         self.default_cargo = 'GOOD'
         self.default_cargo_capacity = self.capacities_refittable[0]
         self.cargo_units_buy_menu = 'STR_QUANTITY_FOOD'
@@ -440,7 +440,7 @@ class ContainerCarrier(Ship):
         self.class_refit_groups = ['express_freight','packaged_freight']
         self.label_refits_allowed = ['MAIL','FRUT','WATR']
         self.label_refits_disallowed = ['FISH','LVST','OIL_','TOUR','WOOD']
-        self.capacity_freight = kwargs.get('capacity_cargo_holds', None)
+        self.capacity_freight = 2 * kwargs.get('capacity_cargo_holds', None)
         self.default_cargo = 'GOOD'
         self.default_cargo_capacity = self.capacity_freight
          # kludge to adjust canal speed of the one fast ocean-going container feeder.
